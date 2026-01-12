@@ -1,11 +1,21 @@
-import { Pool } from "pg";
+import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "taskdb",
-  password: "work123",
-  port: 5432,
-});
+const adapter = new PrismaPg({ 
+    connectionString: process.env.DATABASE_URL 
+  });
 
-export default pool;
+const prismaClientSingleleton = () =>{
+    return new PrismaClient({
+        adapter
+    })
+}
+
+declare const globalThis: {
+    prismaGlobal: ReturnType<typeof prismaClientSingleleton>;
+
+} & typeof global;
+const prisma = globalThis.prismaGlobal ?? prismaClientSingleleton()
+
+export default prisma
+ if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma
